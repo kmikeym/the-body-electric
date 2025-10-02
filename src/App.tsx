@@ -39,8 +39,21 @@ function App() {
     trend: settings.unit === 'lb' ? kgToLb(p.trendKg) : p.trendKg,
   }));
 
-  // Y-axis domain based on unit
-  const yAxisDomain = settings.unit === 'lb' ? [150, 250] : [68, 113]; // 150-250 lb = ~68-113 kg
+  // Y-axis domain: dynamic range from min to max weight with some padding
+  const yAxisDomain = (() => {
+    if (chartData.length === 0) return [0, 100];
+
+    const weights = chartData.map(d => d.weight);
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const range = maxWeight - minWeight;
+    const padding = Math.max(range * 0.1, 2); // 10% padding or 2 units minimum
+
+    return [
+      Math.floor(minWeight - padding),
+      Math.ceil(maxWeight + padding)
+    ];
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,12 +100,22 @@ function App() {
                     <XAxis dataKey="date" />
                     <YAxis domain={yAxisDomain} />
                     <Tooltip />
-                    <Scatter dataKey="weight" fill="#14b8a6" name="Weight" />
+                    {/* Daily weigh-ins as light grey line (behind) */}
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#d1d5db"
+                      strokeWidth={1.5}
+                      name="Daily Weight"
+                      dot={{ fill: '#9ca3af', r: 3 }}
+                      strokeDasharray="3 3"
+                    />
+                    {/* EWMA trend line (on top) */}
                     <Line
                       type="monotone"
                       dataKey="trend"
                       stroke="#0891b2"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                       name="Trend (EWMA)"
                       dot={false}
                     />
@@ -226,8 +249,8 @@ function App() {
                       {kcal > 0 ? '+' : ''}{Math.round(kcal)} kcal/day
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {kcal < -100 && 'Deficit (losing weight)'}
                       {kcal > 100 && 'Surplus (gaining weight)'}
+                      {kcal < -100 && 'Deficit (losing weight)'}
                       {Math.abs(kcal) <= 100 && 'Maintenance'}
                     </p>
                   </div>

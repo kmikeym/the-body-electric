@@ -49,10 +49,11 @@ export function calculate7DaySlope(trendPoints: TrendPoint[]): number {
 
 /**
  * Calculate calorie surplus/deficit from slope
- * Negative slope = deficit, positive = surplus
+ * Positive slope (gaining) = positive surplus
+ * Negative slope (losing) = negative deficit
  */
 export function caloriePerDay(slopeKgPerDay: number, caloriePerKg: number = 7700): number {
-  return -slopeKgPerDay * caloriePerKg;
+  return slopeKgPerDay * caloriePerKg;
 }
 
 /**
