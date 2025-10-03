@@ -7,16 +7,19 @@ import { WeighIn, TrendPoint } from '../types';
 export function computeTrend(weighIns: WeighIn[], alpha: number): TrendPoint[] {
   if (weighIns.length === 0) return [];
 
+  const result: TrendPoint[] = [];
   let trend = weighIns[0].weightKg; // Initialize with first value
 
-  return weighIns.map(w => {
+  for (const w of weighIns) {
     trend = alpha * w.weightKg + (1 - alpha) * trend;
-    return {
+    result.push({
       date: w._id,
       weightKg: w.weightKg,
       trendKg: trend,
-    };
-  });
+    });
+  }
+
+  return result;
 }
 
 /**
