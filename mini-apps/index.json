@@ -1,0 +1,34 @@
+{
+  "apps": [
+    {
+      "id": "weight-tracker",
+      "name": "Weight Tracker",
+      "description": "EWMA-based weight tracking with calorie delta calculations",
+      "path": "/weight-tracker",
+      "icon": "⚖️",
+      "category": "body-composition",
+      "status": "active",
+      "dataEndpoint": "/api/weight-tracker/export",
+      "version": "1.0.0",
+      "lastUpdated": "2025-10-03"
+    }
+  ],
+  "categories": {
+    "body-composition": {
+      "name": "Body Composition",
+      "description": "Track weight, body fat, and muscle mass"
+    },
+    "activity": {
+      "name": "Activity & Exercise",
+      "description": "Movement, workouts, and physical activity"
+    },
+    "nutrition": {
+      "name": "Nutrition",
+      "description": "Diet, calories, and macronutrients"
+    },
+    "biometrics": {
+      "name": "Biometrics",
+      "description": "Heart rate, blood pressure, sleep, etc."
+    }
+  }
+}

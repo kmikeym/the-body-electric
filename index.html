@@ -1,13 +1,169 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Body Electric - Weight Trend Tracker</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Body Electric - Coming Soon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .features {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .features h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #06b6d4;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .feature-name {
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .feature-status {
+            margin-left: auto;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(6, 182, 212, 0.2);
+            color: #06b6d4;
+        }
+
+        .status-coming {
+            background: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
+
+        .footer {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .footer a {
+            color: #06b6d4;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>THE BODY ELECTRIC</h1>
+        <p class="subtitle">Integrated Health & Fitness Platform</p>
+
+        <div class="features">
+            <h2>Coming Soon</h2>
+            <ul class="feature-list">
+                <li>
+                    <span class="icon">⚖️</span>
+                    <span class="feature-name">Weight Tracker</span>
+                    <span class="feature-status status-active">Active</span>
+                </li>
+                <li>
+                    <span class="icon">🏃</span>
+                    <span class="feature-name">Activity Tracker</span>
+                    <span class="feature-status status-coming">Soon</span>
+                </li>
+                <li>
+                    <span class="icon">🍎</span>
+                    <span class="feature-name">Nutrition Log</span>
+                    <span class="feature-status status-coming">Soon</span>
+                </li>
+                <li>
+                    <span class="icon">❤️</span>
+                    <span class="feature-name">Biometrics</span>
+                    <span class="feature-status status-coming">Soon</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Part of <a href="https://quarterly.systems">Quarterly Systems</a></p>
+            <p>a K5M company</p>
+        </div>
+    </div>
+</body>
 </html>
