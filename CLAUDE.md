@@ -128,6 +128,13 @@ Each mini-app chooses its own stack. Example (Weight Tracker):
 - Fireproof (local-first database)
 - Recharts, Tailwind CSS, date-fns
 
+## Development Guidelines
+
+### Debugging
+- **NEVER add debugging code** to production files (no console.log, debug UI elements, etc.)
+- Use browser DevTools console for debugging
+- Check browser console for errors instead of adding debug output to code
+
 ## Future Enhancements
 
 - **Dashboard**: Unified view aggregating data from all mini-apps
