@@ -142,6 +142,88 @@ export default function App() {
     return { entries: entriesWithAvgAsc, minT, maxT, minW, maxW };
   }, [entriesWithAvgAsc]);
 
+  // statistics calculations
+  const stats = useMemo(() => {
+    if (entriesWithAvgAsc.length === 0) return null;
+
+    // Find highest/lowest actual weight
+    let highestActual = entriesWithAvgAsc[0];
+    let lowestActual = entriesWithAvgAsc[0];
+    let highestTrend = entriesWithAvgAsc[0];
+    let lowestTrend = entriesWithAvgAsc[0];
+
+    for (const entry of entriesWithAvgAsc) {
+      if (entry.weightNum > highestActual.weightNum) highestActual = entry;
+      if (entry.weightNum < lowestActual.weightNum) lowestActual = entry;
+      if (entry.runningAverage > highestTrend.runningAverage) highestTrend = entry;
+      if (entry.runningAverage < lowestTrend.runningAverage) lowestTrend = entry;
+    }
+
+    // Calculate streaks (consecutive days)
+    const allEntriesSorted = docs
+      .filter((d) => d.type === "weight-entry" && d.weight !== "" && d.date)
+      .slice()
+      .sort((a, b) => new Date(b.date) - new Date(a.date)); // newest first
+
+    let currentStreak = 0;
+    let maxStreak = 0;
+    let tempStreak = 1;
+
+    if (allEntriesSorted.length > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const mostRecent = new Date(allEntriesSorted[0].date);
+      mostRecent.setHours(0, 0, 0, 0);
+
+      // Check if current streak is active (today or yesterday)
+      const daysSinceLastEntry = Math.floor((today - mostRecent) / (1000 * 60 * 60 * 24));
+      if (daysSinceLastEntry <= 1) {
+        currentStreak = 1;
+
+        // Count consecutive days backwards
+        for (let i = 1; i < allEntriesSorted.length; i++) {
+          const prevDate = new Date(allEntriesSorted[i - 1].date);
+          const currDate = new Date(allEntriesSorted[i].date);
+          prevDate.setHours(0, 0, 0, 0);
+          currDate.setHours(0, 0, 0, 0);
+
+          const dayDiff = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
+          if (dayDiff === 1) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // Find longest streak ever
+      for (let i = 0; i < allEntriesSorted.length - 1; i++) {
+        const prevDate = new Date(allEntriesSorted[i].date);
+        const currDate = new Date(allEntriesSorted[i + 1].date);
+        prevDate.setHours(0, 0, 0, 0);
+        currDate.setHours(0, 0, 0, 0);
+
+        const dayDiff = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
+        if (dayDiff === 1) {
+          tempStreak++;
+          maxStreak = Math.max(maxStreak, tempStreak);
+        } else {
+          tempStreak = 1;
+        }
+      }
+      maxStreak = Math.max(maxStreak, tempStreak, currentStreak);
+    }
+
+    return {
+      highestActual,
+      lowestActual,
+      highestTrend,
+      lowestTrend,
+      currentStreak,
+      maxStreak
+    };
+  }, [entriesWithAvgAsc, docs]);
+
   // tooltip for chart
   const [tooltip, setTooltip] = useState(null);
 
@@ -487,6 +569,49 @@ export default function App() {
               </svg>
             </div>
           </div>
+
+          {/* Statistics */}
+          {stats && (
+            <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded">
+                <div className="text-xs text-blue-600 font-semibold mb-1">Highest Weight</div>
+                <div className="text-lg font-bold text-blue-900">{stats.highestActual.weightNum.toFixed(1)}</div>
+                <div className="text-xs text-blue-700">{formatDate(stats.highestActual.date)}</div>
+              </div>
+
+              <div className="p-3 bg-green-50 border border-green-100 rounded">
+                <div className="text-xs text-green-600 font-semibold mb-1">Lowest Weight</div>
+                <div className="text-lg font-bold text-green-900">{stats.lowestActual.weightNum.toFixed(1)}</div>
+                <div className="text-xs text-green-700">{formatDate(stats.lowestActual.date)}</div>
+              </div>
+
+              <div className="p-3 bg-orange-50 border border-orange-100 rounded">
+                <div className="text-xs text-orange-600 font-semibold mb-1">Highest Trend</div>
+                <div className="text-lg font-bold text-orange-900">{stats.highestTrend.runningAverage.toFixed(1)}</div>
+                <div className="text-xs text-orange-700">{formatDate(stats.highestTrend.date)}</div>
+              </div>
+
+              <div className="p-3 bg-teal-50 border border-teal-100 rounded">
+                <div className="text-xs text-teal-600 font-semibold mb-1">Lowest Trend</div>
+                <div className="text-lg font-bold text-teal-900">{stats.lowestTrend.runningAverage.toFixed(1)}</div>
+                <div className="text-xs text-teal-700">{formatDate(stats.lowestTrend.date)}</div>
+              </div>
+
+              <div className="p-3 bg-purple-50 border border-purple-100 rounded">
+                <div className="text-xs text-purple-600 font-semibold mb-1">Current Streak</div>
+                <div className="text-lg font-bold text-purple-900">{stats.currentStreak} days</div>
+                <div className="text-xs text-purple-700">
+                  {stats.currentStreak === 0 ? "Log today to start!" : "Keep it up!"}
+                </div>
+              </div>
+
+              <div className="p-3 bg-pink-50 border border-pink-100 rounded">
+                <div className="text-xs text-pink-600 font-semibold mb-1">Best Streak</div>
+                <div className="text-lg font-bold text-pink-900">{stats.maxStreak} days</div>
+                <div className="text-xs text-pink-700">Personal record</div>
+              </div>
+            </div>
+          )}
 
           {/* Table */}
           <div className="overflow-x-auto">
