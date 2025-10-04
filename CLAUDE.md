@@ -4,99 +4,134 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**The Body Electric** is a weight trend tracker that uses EWMA (Exponentially Weighted Moving Average) to smooth daily weight fluctuations and provide actionable insights. Part of the Quarterly Systems ecosystem.
-
-**Tech Stack**: React 18 + TypeScript, Vite, Fireproof (local-first database), Recharts, Tailwind CSS, date-fns
+**The Body Electric** is an integrated health & fitness platform that provides a unified dashboard for tracking various health metrics through specialized mini-apps. Part of the Quarterly Systems ecosystem.
 
 **Target URL**: `body.quarterly.systems` (Cloudflare Pages)
 
-## Development Commands
-
-```bash
-# Install (legacy peer deps required for Fireproof compatibility)
-npm install --legacy-peer-deps
-
-# Dev server (runs on http://localhost:5173/)
-npm run dev
-
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
-```
-
 ## Architecture
 
-### Data Flow
-1. **Fireproof Database** (`use-fireproof`): Local-first CRDT database stored in IndexedDB
-   - Database name: `'body-electric'`
-   - All data persists locally, cloud sync capability ready but not enabled
+### Repository Structure
 
-2. **Data Model**:
-   - **WeighIn Document**: `{ _id: "2025-10-02", weightKg: 82.5, type: "weighin" }`
-   - **Settings Document**: `{ _id: "settings", unit: "kg"|"lb", alpha: 0.1, caloriePerKg: 7700, type: "settings" }`
+```
+the-body-electric/
+├── index.html              # Main landing/coming soon page
+├── apps/                   # Mini-apps directory
+│   ├── mini-apps/          # Mini-apps registry and docs
+│   │   ├── index.json      # App metadata and registry
+│   │   └── README.md       # Mini-apps documentation
+│   └── weight-tracker/     # Weight tracking mini-app (placeholder)
+├── CLAUDE.md               # This file
+└── .git/                   # Git repository
+```
 
-3. **Computation Pipeline** (see `src/utils/ewma.ts`):
-   ```
-   Raw Weight Data → EWMA Trend (α=0.1) → 7-Day Slope → Calorie Delta
-   ```
+### Mini-Apps System
 
-### Key Files
+Each mini-app is a self-contained application within the `/apps` directory:
 
-**`src/hooks/useWeighIns.ts`**: Fireproof integration for weigh-in CRUD
-- Uses `useLiveQuery()` for reactive data binding
-- Filters by `type: 'weighin'` and sorts by date (`_id`)
-- `addWeighIn(weightKg, date?)` - stores data with ISO date as `_id`
+- **Registry**: `/apps/mini-apps/index.json` contains metadata for all apps
+- **Categories**: body-composition, activity, nutrition, biometrics
+- **Data Export**: Each app exposes a standardized data endpoint
+- **Independent**: Apps can use different tech stacks as needed
 
-**`src/hooks/useSettings.ts`**: Manages app settings (unit, EWMA alpha, calorie conversion)
+### Current Mini-Apps
 
-**`src/utils/ewma.ts`**: EWMA calculation engine
-- `computeTrend()`: Calculates `S_t = α × X_t + (1-α) × S_{t-1}`
-- `calculate7DaySlope()`: Linear regression on last 7 trend points
-- `caloriePerDay()`: Converts slope to kcal/day (`slope × 7700 kcal/kg`)
-- `enrichTrendWithSlope()`: Combines all calculations into `TrendPoint[]`
+**Weight Tracker** (Active)
+- EWMA-based weight trend analysis
+- 7-day slope calculation
+- Calorie delta estimation
+- Location: `/apps/weight-tracker/` (to be implemented)
 
-**`src/utils/units.ts`**: kg ↔ lb conversion and formatting
+**Future Mini-Apps** (Planned)
+- Activity Tracker - Movement, workouts, exercise
+- Nutrition Log - Diet, calories, macros
+- Biometrics - Heart rate, blood pressure, sleep
 
-**`src/App.tsx`**: Main UI component
-- Chart shows last 30 days (raw weight as dashed grey line, EWMA trend as solid teal)
-- Stats panel displays current trend, 7-day slope, and calorie delta with color coding
-- Form for daily weigh-in with date picker (defaults to today)
+## Main Landing Page
 
-### EWMA Parameters
-- **Alpha (α)**: 0.1 (smoothing factor, fixed in MVP)
-  - Lower α = smoother trend, slower response to changes
-  - Higher α = more responsive, less smoothing
-- **Calorie Conversion**: 7700 kcal/kg (standard conversion for body weight)
-- **Slope Window**: Last 7 trend points (7 days of data)
+**File**: `index.html`
 
-### Type System
-All types defined in `src/types/index.ts`:
-- `WeighIn`: Fireproof document for daily weight entries
-- `Settings`: Fireproof document for app configuration
-- `TrendPoint`: Computed type with raw weight, trend, slope, and calorie data
+Simple static HTML page showing:
+- The Body Electric branding
+- List of available mini-apps with status (Active/Soon)
+- Links to Quarterly Systems
+- No build process required
 
-## Fireproof Usage Notes
+**Deployment**:
+- Cloudflare Pages serves `/index.html` directly
+- No build command needed
+- Auto-deploys on push to `main` branch
 
-- **Live Queries**: Use `useLiveQuery()` from `use-fireproof` for reactive data
-- **Document IDs**: WeighIn docs use ISO date strings (`yyyy-MM-dd`) as `_id` to ensure uniqueness and sortability
-- **Type Safety**: TypeScript types ignore Fireproof's incomplete type definitions where necessary (`@ts-ignore` for sort options)
-- **Multi-device Ready**: CRDT-based sync ready to enable (not in MVP)
+## Development Workflow
+
+### Adding a New Mini-App
+
+1. Create directory: `/apps/[app-name]/`
+2. Update `/apps/mini-apps/index.json` with app metadata
+3. Build the app with its own tech stack
+4. Implement data export endpoint following standardized format
+5. Update main landing page to link to new app
+
+### Data Export Standard
+
+Each mini-app should expose a data endpoint returning:
+
+```json
+{
+  "appId": "app-name",
+  "lastUpdated": "2025-10-03T12:00:00Z",
+  "summary": {
+    "currentValue": 82.5,
+    "unit": "kg",
+    "trend": "decreasing",
+    "changeRate": -0.2
+  },
+  "recentData": [...],
+  "meta": {...}
+}
+```
 
 ## Deployment
 
+### Main Landing Page
 ```bash
-npm run build
-# Deploy dist/ to Cloudflare Pages
+# No build required - static HTML
+git add . && git commit -m "..."
+git push  # Auto-deploys to body.quarterly.systems
 ```
 
-Target domain: `body.quarterly.systems`
-
-Update landing page at `quarterly-systems-landing/src/pages/apps.astro` when deploying.
+### Mini-Apps
+Each mini-app may have its own build process:
+```bash
+cd apps/[app-name]
+npm run build  # or app-specific build command
+# Deploy to subdirectory or subdomain as needed
+```
 
 ## Integration with Quarterly Systems
 
-- Branding: Teal/cyan theme, "a K5M company" footer
-- Navigation: Links to https://quarterly.systems in footer
-- Part of 4-product suite (VibeCode, Office, Status, Knowledge Base)
+- **Branding**: Cyan/blue gradients, dark theme, "a K5M company" footer
+- **Navigation**: Links to https://quarterly.systems
+- **Ecosystem**: Part of Quarterly Systems platform alongside VibeCode, Office, Status, Knowledge Base
+- **Listing**: Update `quarterly-systems-landing/src/pages/apps.astro` when adding major features
+
+## Tech Stack
+
+### Main Landing Page
+- Static HTML/CSS (no framework)
+- Gradient styling matching Quarterly Systems branding
+- Responsive design
+
+### Mini-Apps (Independent)
+Each mini-app chooses its own stack. Example (Weight Tracker):
+- React 18 + TypeScript
+- Vite build system
+- Fireproof (local-first database)
+- Recharts, Tailwind CSS, date-fns
+
+## Future Enhancements
+
+- **Dashboard**: Unified view aggregating data from all mini-apps
+- **Data Sync**: Cross-app data sharing and insights
+- **PWA Support**: Offline capability for mini-apps
+- **Authentication**: Optional user accounts for cloud sync
+- **Mobile Apps**: Native iOS/Android versions
