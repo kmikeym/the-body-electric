@@ -65,6 +65,9 @@ export default function App() {
   // selected item for detail view
   const [selectedId, setSelectedId] = useState(null);
 
+  // time range filter
+  const [timeRange, setTimeRange] = useState("ALL"); // ALL, MONTH, QUARTER, YEAR
+
   // responsive chart sizing
   const chartRef = useRef();
   const [chartWidth, setChartWidth] = useState(360);
@@ -81,7 +84,7 @@ export default function App() {
 
   // normalize, sort ascending by date for running average calculation
   const entriesAsc = useMemo(() => {
-    return docs
+    const filtered = docs
       .filter((d) => d.type === "weight-entry" && d.weight !== "" && d.date)
       .slice()
       .sort((a, b) => {
@@ -89,7 +92,23 @@ export default function App() {
         if (t !== 0) return t;
         return (a._id || "").localeCompare(b._id || "");
       });
-  }, [docs]);
+
+    // Apply time range filter
+    if (timeRange === "ALL") return filtered;
+
+    const now = new Date();
+    const cutoff = new Date();
+
+    if (timeRange === "MONTH") {
+      cutoff.setDate(now.getDate() - 30);
+    } else if (timeRange === "QUARTER") {
+      cutoff.setDate(now.getDate() - 90);
+    } else if (timeRange === "YEAR") {
+      cutoff.setDate(now.getDate() - 365);
+    }
+
+    return filtered.filter(e => new Date(e.date) >= cutoff);
+  }, [docs, timeRange]);
 
   // compute running averages and attach to entries
   const entriesWithAvgAsc = useMemo(() => {
@@ -288,8 +307,25 @@ export default function App() {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-semibold">Weight & Trend</h2>
-              <div className="text-xs text-gray-600">
-                Actual — blue • Trend — orange
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-gray-600 mr-2">
+                  Actual — blue • Trend — orange
+                </div>
+                <div className="flex gap-1">
+                  {["ALL", "MONTH", "QUARTER", "YEAR"].map(range => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      className={`px-2 py-1 text-xs rounded ${
+                        timeRange === range
+                          ? "bg-[#2563eb] text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {range === "ALL" ? "All" : range === "MONTH" ? "30d" : range === "QUARTER" ? "90d" : "1y"}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
