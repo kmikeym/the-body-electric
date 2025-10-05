@@ -110,16 +110,25 @@ export default function App() {
     return filtered.filter(e => new Date(e.date) >= cutoff);
   }, [docs, timeRange]);
 
-  // compute running averages and attach to entries
+  // compute EWMA (Exponentially Weighted Moving Average) trend - Hacker's Diet method
   const entriesWithAvgAsc = useMemo(() => {
     const result = [];
-    let sum = 0;
+    const beta = 0.9; // smoothing factor (90% weight on trend, 10% on new data)
+    let trend = null;
+
     for (let i = 0; i < entriesAsc.length; i++) {
       const e = entriesAsc[i];
       const w = Number(e.weight) || 0;
-      sum += w;
-      const avg = sum / (i + 1);
-      result.push({ ...e, runningAverage: Number(avg.toFixed(1)), weightNum: Number(w) });
+
+      // EWMA formula: trend_t = β × trend_(t-1) + (1-β) × weight_t
+      if (trend === null) {
+        // Initialize trend with first weight
+        trend = w;
+      } else {
+        trend = beta * trend + (1 - beta) * w;
+      }
+
+      result.push({ ...e, runningAverage: Number(trend.toFixed(1)), weightNum: Number(w) });
     }
     return result;
   }, [entriesAsc]);
