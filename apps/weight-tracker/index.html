@@ -106,7 +106,9 @@ export default function App() {
     const now = new Date();
     const cutoff = new Date();
 
-    if (timeRange === "MONTH") {
+    if (timeRange === "WEEK") {
+      cutoff.setDate(now.getDate() - 7);
+    } else if (timeRange === "MONTH") {
       cutoff.setDate(now.getDate() - 30);
     } else if (timeRange === "QUARTER") {
       cutoff.setDate(now.getDate() - 90);
@@ -240,6 +242,58 @@ export default function App() {
     };
   }, [entriesWithAvgAsc, docs]);
 
+  // calorie delta calculation (7-day trend slope)
+  const calorieDelta = useMemo(() => {
+    if (entriesWithAvgAsc.length < 7) return null;
+
+    // Get last 7 entries
+    const last7 = entriesWithAvgAsc.slice(-7);
+    const firstTrend = last7[0].runningAverage;
+    const lastTrend = last7[last7.length - 1].runningAverage;
+    const firstDate = new Date(last7[0].date);
+    const lastDate = new Date(last7[last7.length - 1].date);
+    const days = (lastDate - firstDate) / (1000 * 60 * 60 * 24);
+
+    if (days === 0) return null;
+
+    // Calculate lbs/week change
+    const lbsPerDay = (lastTrend - firstTrend) / days;
+    const lbsPerWeek = lbsPerDay * 7;
+
+    // Convert to calories (1 lb = 3500 calories)
+    const caloriesPerDay = Math.round(lbsPerWeek * 3500 / 7);
+
+    return {
+      lbsPerWeek: Number(lbsPerWeek.toFixed(2)),
+      caloriesPerDay
+    };
+  }, [entriesWithAvgAsc]);
+
+  // goal calculator
+  const [goalWeight, setGoalWeight] = useState("");
+  const goalProjection = useMemo(() => {
+    if (!goalWeight || !calorieDelta || calorieDelta.lbsPerWeek === 0) return null;
+
+    const goal = Number(goalWeight);
+    if (isNaN(goal) || entriesWithAvgAsc.length === 0) return null;
+
+    const currentTrend = entriesWithAvgAsc[entriesWithAvgAsc.length - 1].runningAverage;
+    const remaining = goal - currentTrend;
+    const weeksToGoal = remaining / calorieDelta.lbsPerWeek;
+    const daysToGoal = Math.round(weeksToGoal * 7);
+
+    if (daysToGoal < 0) return null; // Goal is in wrong direction
+
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysToGoal);
+
+    return {
+      remaining: Number(remaining.toFixed(1)),
+      daysToGoal,
+      targetDate: targetDate.toISOString().slice(0, 10)
+    };
+  }, [goalWeight, calorieDelta, entriesWithAvgAsc]);
+
   // tooltip for chart
   const [tooltip, setTooltip] = useState(null);
 
@@ -345,7 +399,6 @@ export default function App() {
       }
 
       setImportStatus(`✓ Imported ${imported} entries (skipped ${skipped} interpolated)`);
-      setTimeout(() => setImportStatus(null), 5000);
 
     } catch (err) {
       setImportStatus(`✗ Error: ${err.message}`);
@@ -433,8 +486,15 @@ export default function App() {
               </label>
             </div>
             {importStatus && (
-              <div className={`mt-2 text-sm ${importStatus.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
-                {importStatus}
+              <div className={`mt-2 text-sm ${importStatus.startsWith('✓') ? 'text-green-600' : 'text-red-600'} flex items-center gap-2`}>
+                <span>{importStatus}</span>
+                <button
+                  onClick={() => setImportStatus(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
               </div>
             )}
           </div>
@@ -448,7 +508,7 @@ export default function App() {
                   Actual — blue • Trend — orange
                 </div>
                 <div className="flex gap-1">
-                  {["ALL", "MONTH", "QUARTER", "YEAR"].map(range => (
+                  {["ALL", "YEAR", "QUARTER", "MONTH", "WEEK"].map(range => (
                     <button
                       key={range}
                       onClick={() => setTimeRange(range)}
@@ -458,7 +518,7 @@ export default function App() {
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
-                      {range === "ALL" ? "All" : range === "MONTH" ? "30d" : range === "QUARTER" ? "90d" : "1y"}
+                      {range === "ALL" ? "All" : range === "WEEK" ? "1w" : range === "MONTH" ? "30d" : range === "QUARTER" ? "90d" : "1y"}
                     </button>
                   ))}
                 </div>
@@ -666,6 +726,67 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* Calorie Delta */}
+          {calorieDelta && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+              <div className="text-sm font-semibold text-blue-900 mb-2">7-Day Trend Analysis</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-blue-600">Rate of Change</div>
+                  <div className="text-xl font-bold text-blue-900">
+                    {calorieDelta.lbsPerWeek > 0 ? '+' : ''}{calorieDelta.lbsPerWeek} lbs/week
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-blue-600">Estimated Calorie Delta</div>
+                  <div className="text-xl font-bold text-blue-900">
+                    {calorieDelta.caloriesPerDay > 0 ? '+' : ''}{calorieDelta.caloriesPerDay} cal/day
+                  </div>
+                  <div className="text-xs text-blue-700 mt-1">
+                    {calorieDelta.caloriesPerDay > 0 ? 'Surplus' : 'Deficit'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Goal Calculator */}
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded">
+            <div className="text-sm font-semibold text-green-900 mb-2">Goal Timeline</div>
+            <div className="flex gap-2 items-end mb-3">
+              <div className="flex-1">
+                <label className="text-xs text-green-600 block mb-1">Target Weight (lbs)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={goalWeight}
+                  onChange={(e) => setGoalWeight(e.target.value)}
+                  placeholder="e.g. 175"
+                  className="w-full px-3 py-2 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+            {goalProjection && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Remaining:</span>
+                  <span className="font-bold text-green-900">{goalProjection.remaining} lbs</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Estimated Time:</span>
+                  <span className="font-bold text-green-900">{goalProjection.daysToGoal} days</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Target Date:</span>
+                  <span className="font-bold text-green-900">{formatDate(goalProjection.targetDate)}</span>
+                </div>
+              </div>
+            )}
+            {!calorieDelta && goalWeight && (
+              <div className="text-xs text-green-700">Need at least 7 entries to calculate timeline</div>
+            )}
+          </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
