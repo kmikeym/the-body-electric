@@ -332,8 +332,8 @@
         }
 
         .system-status.offline {
-            color: #666;
-            border-color: #666;
+            color: #a00;
+            border-color: #a00;
         }
 
         /* Bio readouts */
@@ -422,40 +422,48 @@
                 <div class="panel">
                     <div class="panel-title">// VITAL METRICS</div>
                     <div class="metric">
+                        <span class="metric-label">Cardiovascular</span>
+                        <span class="metric-value active">HR: 72 | BP: 120/80 | HRV: 65ms</span>
+                    </div>
+                    <div class="metric">
                         <span class="metric-label">Body Composition</span>
-                        <span class="metric-value active">TRACKING</span>
+                        <span class="metric-value active">182.3 lbs | BMI: 24.2 | BF: 18%</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Activity Level</span>
-                        <span class="metric-value pending">PENDING</span>
+                        <span class="metric-label">Metabolic Health</span>
+                        <span class="metric-value pending">Glucose: 95 | RMR: 1,850 cal</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Nutrition Status</span>
-                        <span class="metric-value pending">PENDING</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Biometric Data</span>
-                        <span class="metric-value pending">PENDING</span>
+                        <span class="metric-label">Recovery</span>
+                        <span class="metric-value pending">Sleep: 85/100 | Stress: Low</span>
                     </div>
                 </div>
 
                 <div class="panel">
                     <div class="panel-title">// PERFORMANCE DATA</div>
+                    <div class="metric">
+                        <span class="metric-label">VO2 Max</span>
+                        <span class="metric-value">45 mL/kg/min</span>
+                    </div>
                     <div class="bio-graph">
                         <svg width="100%" height="100%" viewBox="0 0 300 60" preserveAspectRatio="none">
                             <polyline
                                 class="graph-line"
-                                points="0,30 30,25 60,35 90,20 120,28 150,15 180,25 210,18 240,30 270,22 300,28"
+                                points="0,35 30,32 60,30 90,28 120,30 150,25 180,27 210,22 240,25 270,20 300,22"
                             />
                         </svg>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Trend Analysis</span>
-                        <span class="metric-value">EWMA β=0.9</span>
+                        <span class="metric-label">Sleep Quality</span>
+                        <span class="metric-value">7.5 hrs avg</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Caloric Delta</span>
-                        <span class="metric-value">CALCULATED</span>
+                        <span class="metric-label">Activity Load</span>
+                        <span class="metric-value">245 (weekly)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Hydration</span>
+                        <span class="metric-value">2.1L / 3.0L</span>
                     </div>
                 </div>
             </div>
@@ -466,118 +474,7 @@
                     BIO-SYSTEMS MONITOR // FULL BODY SCAN
                 </div>
                 <div class="body-wireframe">
-                    <svg width="400" height="600" viewBox="0 0 400 600">
-                        <defs>
-                            <!-- Gradient for glowing effect -->
-                            <radialGradient id="glow">
-                                <stop offset="0%" style="stop-color:#0ff;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#0ff;stop-opacity:0" />
-                            </radialGradient>
-                        </defs>
-
-                        <!-- Skeletal structure -->
-                        <!-- Skull -->
-                        <ellipse cx="200" cy="50" rx="30" ry="40" class="skeleton"/>
-                        <path d="M 180 80 Q 200 90 220 80" class="skeleton"/>
-
-                        <!-- Spine -->
-                        <line x1="200" y1="90" x2="200" y2="320" class="skeleton"/>
-
-                        <!-- Ribcage -->
-                        <ellipse cx="200" cy="140" rx="45" ry="30" class="wireframe"/>
-                        <ellipse cx="200" cy="160" rx="50" ry="25" class="wireframe"/>
-                        <ellipse cx="200" cy="180" rx="52" ry="28" class="wireframe"/>
-                        <ellipse cx="200" cy="200" rx="50" ry="25" class="wireframe"/>
-
-                        <!-- Pelvis -->
-                        <ellipse cx="200" cy="320" rx="45" ry="25" class="skeleton"/>
-                        <path d="M 155 315 Q 155 340 175 345" class="skeleton"/>
-                        <path d="M 245 315 Q 245 340 225 345" class="skeleton"/>
-
-                        <!-- Shoulders/Clavicles -->
-                        <line x1="200" y1="120" x2="145" y2="130" class="skeleton"/>
-                        <line x1="200" y1="120" x2="255" y2="130" class="skeleton"/>
-
-                        <!-- Arms - skeletal -->
-                        <line x1="145" y1="130" x2="120" y2="240" class="skeleton"/>
-                        <line x1="255" y1="130" x2="280" y2="240" class="skeleton"/>
-                        <line x1="120" y1="240" x2="110" y2="340" class="skeleton"/>
-                        <line x1="280" y1="240" x2="290" y2="340" class="skeleton"/>
-
-                        <!-- Legs - skeletal -->
-                        <line x1="175" y1="345" x2="180" y2="480" class="skeleton"/>
-                        <line x1="225" y1="345" x2="220" y2="480" class="skeleton"/>
-                        <line x1="180" y1="480" x2="175" y2="570" class="skeleton"/>
-                        <line x1="220" y1="480" x2="225" y2="570" class="skeleton"/>
-
-                        <!-- Muscle groups overlay -->
-                        <!-- Chest/pectorals -->
-                        <path d="M 170 130 Q 150 160 155 190 L 200 180 Z" class="muscle"/>
-                        <path d="M 230 130 Q 250 160 245 190 L 200 180 Z" class="muscle"/>
-
-                        <!-- Abs -->
-                        <rect x="185" y="200" width="30" height="25" class="muscle"/>
-                        <rect x="185" y="230" width="30" height="25" class="muscle"/>
-                        <rect x="185" y="260" width="30" height="25" class="muscle"/>
-
-                        <!-- Shoulders/deltoids -->
-                        <ellipse cx="145" cy="140" rx="15" ry="25" class="muscle"/>
-                        <ellipse cx="255" cy="140" rx="15" ry="25" class="muscle"/>
-
-                        <!-- Biceps -->
-                        <ellipse cx="130" cy="180" rx="8" ry="30" class="muscle"/>
-                        <ellipse cx="270" cy="180" rx="8" ry="30" class="muscle"/>
-
-                        <!-- Quads -->
-                        <ellipse cx="178" cy="400" rx="12" ry="50" class="muscle"/>
-                        <ellipse cx="222" cy="400" rx="12" ry="50" class="muscle"/>
-
-                        <!-- Calves -->
-                        <ellipse cx="177" cy="520" rx="10" ry="35" class="muscle"/>
-                        <ellipse cx="223" cy="520" rx="10" ry="35" class="muscle"/>
-
-                        <!-- Targeting reticles -->
-                        <!-- Head reticle -->
-                        <g class="reticle-pulse">
-                            <circle cx="200" cy="50" r="50" class="reticle"/>
-                            <line x1="150" y1="50" x2="165" y2="50" class="reticle"/>
-                            <line x1="235" y1="50" x2="250" y2="50" class="reticle"/>
-                            <line x1="200" y1="0" x2="200" y2="15" class="reticle"/>
-                            <line x1="200" y1="85" x2="200" y2="100" class="reticle"/>
-                        </g>
-
-                        <!-- Chest reticle -->
-                        <g class="reticle-pulse" style="animation-delay: 0.5s">
-                            <circle cx="200" cy="180" r="60" class="reticle"/>
-                            <line x1="145" y1="180" x2="255" y2="180" class="reticle"/>
-                            <line x1="200" y1="125" x2="200" y2="235" class="reticle"/>
-                        </g>
-
-                        <!-- Pelvis reticle -->
-                        <g class="reticle-pulse" style="animation-delay: 1s">
-                            <circle cx="200" cy="320" r="55" class="reticle"/>
-                            <path d="M 145 320 L 255 320 M 200 265 L 200 375" class="reticle"/>
-                        </g>
-
-                        <!-- Data points -->
-                        <circle cx="200" cy="50" r="3" class="data-point"/>
-                        <circle cx="145" cy="130" r="3" class="data-point" style="animation-delay: 0.3s"/>
-                        <circle cx="255" cy="130" r="3" class="data-point" style="animation-delay: 0.3s"/>
-                        <circle cx="200" cy="180" r="3" class="data-point" style="animation-delay: 0.6s"/>
-                        <circle cx="200" cy="320" r="3" class="data-point" style="animation-delay: 0.9s"/>
-                        <circle cx="180" cy="480" r="3" class="data-point" style="animation-delay: 1.2s"/>
-                        <circle cx="220" cy="480" r="3" class="data-point" style="animation-delay: 1.2s"/>
-
-                        <!-- Data readout lines -->
-                        <line x1="200" y1="50" x2="320" y2="30" class="data-line"/>
-                        <line x1="200" y1="180" x2="320" y2="180" class="data-line"/>
-                        <line x1="200" y1="320" x2="320" y2="350" class="data-line"/>
-
-                        <!-- Data labels -->
-                        <text x="325" y="35" fill="#0ff" font-size="9" font-family="Share Tech Mono, monospace">HEAD</text>
-                        <text x="325" y="185" fill="#0ff" font-size="9" font-family="Share Tech Mono, monospace">TORSO</text>
-                        <text x="325" y="355" fill="#0ff" font-size="9" font-family="Share Tech Mono, monospace">CORE</text>
-                    </svg>
+                    <img src="/body-outline.png" alt="Body Scan" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px #0ff);">
                     <div class="scan-line"></div>
                 </div>
             </div>
@@ -590,7 +487,6 @@
                         <li>
                             <a href="/apps/weight-tracker/" class="system-item">
                                 <div class="system-name">
-                                    <span class="system-icon">⚖</span>
                                     <span>WEIGHT TRACKER</span>
                                 </div>
                                 <span class="system-status online">ONLINE</span>
@@ -599,7 +495,6 @@
                         <li>
                             <div class="system-item">
                                 <div class="system-name">
-                                    <span class="system-icon">🏃</span>
                                     <span>ACTIVITY MONITOR</span>
                                 </div>
                                 <span class="system-status offline">OFFLINE</span>
@@ -608,7 +503,6 @@
                         <li>
                             <div class="system-item">
                                 <div class="system-name">
-                                    <span class="system-icon">🍎</span>
                                     <span>NUTRITION LOGGER</span>
                                 </div>
                                 <span class="system-status offline">OFFLINE</span>
@@ -617,7 +511,6 @@
                         <li>
                             <div class="system-item">
                                 <div class="system-name">
-                                    <span class="system-icon">❤</span>
                                     <span>BIOMETRIC SCAN</span>
                                 </div>
                                 <span class="system-status offline">OFFLINE</span>
@@ -629,7 +522,27 @@
                 <div class="panel">
                     <div class="panel-title">// SYSTEM INFO</div>
                     <div class="metric">
-                        <span class="metric-label">Platform</span>
+                        <span class="metric-label">Active Sensors</span>
+                        <span class="metric-value active">3 / 12</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Data Points Captured</span>
+                        <span class="metric-value">1,247</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Last Sync</span>
+                        <span class="metric-value">2 min ago</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Health Score</span>
+                        <span class="metric-value active">78 / 100</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">// PLATFORM</div>
+                    <div class="metric">
+                        <span class="metric-label">System</span>
                         <span class="metric-value">QUARTERLY SYSTEMS</span>
                     </div>
                     <div class="metric">
@@ -639,10 +552,6 @@
                     <div class="metric">
                         <span class="metric-label">Storage</span>
                         <span class="metric-value">LOCAL INDEXEDDB</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Sync Status</span>
-                        <span class="metric-value">AUTONOMOUS</span>
                     </div>
                 </div>
             </div>
