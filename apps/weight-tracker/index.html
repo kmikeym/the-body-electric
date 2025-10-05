@@ -51,7 +51,14 @@ export default function App() {
   const { useDocument, useLiveQuery, database } = useFireproof("weight-tracker-db");
 
   // form document for adding entries
-  const today = new Date().toISOString().slice(0, 10);
+  // Use local date to avoid timezone offset issues
+  const today = (() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })();
   const { doc, merge, submit, reset } = useDocument({
     type: "weight-entry",
     date: today,
