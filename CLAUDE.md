@@ -133,6 +133,12 @@ Each mini-app chooses its own stack. Example (Weight Tracker):
 
 ## Development Guidelines
 
+### Testing Weight Tracker
+- The weight tracker (`/apps/weight-tracker/index.html`) can be opened directly in the browser
+- **No dev server needed** - just open the file:// path in Chrome
+- All dependencies are loaded via CDN (React, Recharts, Fireproof, etc.)
+- Data persists in browser IndexedDB
+
 ### Debugging
 - **NEVER add debugging code** to production files (no console.log, debug UI elements, etc.)
 - Use browser DevTools console for debugging

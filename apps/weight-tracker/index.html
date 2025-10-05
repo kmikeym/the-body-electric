@@ -66,8 +66,8 @@ export default function App() {
     createdAt: Date.now()
   });
 
-  // live query of all docs (we'll filter by type)
-  const { docs = [] } = useLiveQuery("date");
+  // live query of all docs (query by created timestamp to get all docs)
+  const { docs = [] } = useLiveQuery("createdAt", { limit: 1000 });
 
   // selected item for detail view
   const [selectedId, setSelectedId] = useState(null);
@@ -270,34 +270,30 @@ export default function App() {
   }, [entriesWithAvgAsc]);
 
   // goal calculator - load saved goal from database
-  const [goalWeight, setGoalWeight] = useState("");
   const [goalInput, setGoalInput] = useState("");
 
-  // Load saved goal on mount
+  // Find saved goal from docs
+  const savedGoal = useMemo(() => {
+    return docs.find(d => d.type === "goal-weight");
+  }, [docs]);
+
+  const goalWeight = savedGoal?.weight || "";
+
+  // Sync input with saved goal
   useEffect(() => {
-    const loadGoal = async () => {
-      const result = await database.allDocs();
-      const goalDoc = result.rows.find(r => r.doc.type === "goal-weight");
-      if (goalDoc) {
-        setGoalWeight(goalDoc.doc.weight);
-        setGoalInput(goalDoc.doc.weight);
-      }
-    };
-    loadGoal();
-  }, [database]);
+    if (savedGoal) {
+      setGoalInput(savedGoal.weight);
+    }
+  }, [savedGoal]);
 
   // Save goal to database
   const handleSaveGoal = async () => {
     if (!goalInput || isNaN(Number(goalInput))) return;
 
-    // Find existing goal doc or create new one
-    const result = await database.allDocs();
-    const goalDoc = result.rows.find(r => r.doc.type === "goal-weight");
-
-    if (goalDoc) {
+    if (savedGoal) {
       // Update existing
       await database.put({
-        ...goalDoc.doc,
+        ...savedGoal,
         weight: goalInput,
         updatedAt: Date.now()
       });
@@ -309,36 +305,58 @@ export default function App() {
         createdAt: Date.now()
       });
     }
-
-    setGoalWeight(goalInput);
   };
 
   const handleClearGoal = async () => {
-    const result = await database.allDocs();
-    const goalDoc = result.rows.find(r => r.doc.type === "goal-weight");
-    if (goalDoc) {
-      await database.del(goalDoc.doc._id);
+    if (savedGoal) {
+      await database.del(savedGoal._id);
     }
-    setGoalWeight("");
     setGoalInput("");
   };
   const goalProjection = useMemo(() => {
-    if (!goalWeight || !calorieDelta || calorieDelta.lbsPerWeek === 0) return null;
+    if (!goalWeight || !calorieDelta) return null;
 
     const goal = Number(goalWeight);
     if (isNaN(goal) || entriesWithAvgAsc.length === 0) return null;
 
     const currentTrend = entriesWithAvgAsc[entriesWithAvgAsc.length - 1].runningAverage;
     const remaining = goal - currentTrend;
+
+    // Determine if we need to lose or gain weight
+    const needToLose = remaining < 0;
+    const needToGain = remaining > 0;
+
+    // Check if current trend is in the right direction
+    const trendingDown = calorieDelta.lbsPerWeek < 0;
+    const trendingUp = calorieDelta.lbsPerWeek > 0;
+
+    const wrongDirection = (needToLose && trendingUp) || (needToGain && trendingDown);
+
+    if (wrongDirection) {
+      // Calculate how many calories need to change to reverse trend
+      const currentCalPerDay = calorieDelta.caloriesPerDay;
+      const neededCalChange = Math.abs(currentCalPerDay);
+
+      return {
+        wrongDirection: true,
+        remaining: Number(remaining.toFixed(1)),
+        currentCalPerDay,
+        neededCalChange,
+        needToLose
+      };
+    }
+
+    // Trending in right direction - calculate time to goal
+    if (calorieDelta.lbsPerWeek === 0) return null;
+
     const weeksToGoal = remaining / calorieDelta.lbsPerWeek;
     const daysToGoal = Math.round(weeksToGoal * 7);
-
-    if (daysToGoal < 0) return null; // Goal is in wrong direction
 
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + daysToGoal);
 
     return {
+      wrongDirection: false,
       remaining: Number(remaining.toFixed(1)),
       daysToGoal,
       targetDate: targetDate.toISOString().slice(0, 10)
@@ -739,27 +757,15 @@ export default function App() {
           {stats && (
             <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-3">
               <div className="p-3 bg-blue-50 border border-blue-100 rounded">
-                <div className="text-xs text-blue-600 font-semibold mb-1">Highest Weight</div>
-                <div className="text-lg font-bold text-blue-900">{stats.highestActual.weightNum.toFixed(1)}</div>
-                <div className="text-xs text-blue-700">{formatDate(stats.highestActual.date)}</div>
-              </div>
-
-              <div className="p-3 bg-green-50 border border-green-100 rounded">
-                <div className="text-xs text-green-600 font-semibold mb-1">Lowest Weight</div>
-                <div className="text-lg font-bold text-green-900">{stats.lowestActual.weightNum.toFixed(1)}</div>
-                <div className="text-xs text-green-700">{formatDate(stats.lowestActual.date)}</div>
+                <div className="text-xs text-blue-600 font-semibold mb-1">Current Weight</div>
+                <div className="text-lg font-bold text-blue-900">{entriesWithAvgAsc.length > 0 ? entriesWithAvgAsc[entriesWithAvgAsc.length - 1].weightNum.toFixed(1) : '-'}</div>
+                <div className="text-xs text-blue-700">{entriesWithAvgAsc.length > 0 ? formatDate(entriesWithAvgAsc[entriesWithAvgAsc.length - 1].date) : 'No data'}</div>
               </div>
 
               <div className="p-3 bg-orange-50 border border-orange-100 rounded">
-                <div className="text-xs text-orange-600 font-semibold mb-1">Highest Trend</div>
-                <div className="text-lg font-bold text-orange-900">{stats.highestTrend.runningAverage.toFixed(1)}</div>
-                <div className="text-xs text-orange-700">{formatDate(stats.highestTrend.date)}</div>
-              </div>
-
-              <div className="p-3 bg-teal-50 border border-teal-100 rounded">
-                <div className="text-xs text-teal-600 font-semibold mb-1">Lowest Trend</div>
-                <div className="text-lg font-bold text-teal-900">{stats.lowestTrend.runningAverage.toFixed(1)}</div>
-                <div className="text-xs text-teal-700">{formatDate(stats.lowestTrend.date)}</div>
+                <div className="text-xs text-orange-600 font-semibold mb-1">Trend Weight</div>
+                <div className="text-lg font-bold text-orange-900">{entriesWithAvgAsc.length > 0 ? entriesWithAvgAsc[entriesWithAvgAsc.length - 1].runningAverage.toFixed(1) : '-'}</div>
+                <div className="text-xs text-orange-700">{entriesWithAvgAsc.length > 0 ? formatDate(entriesWithAvgAsc[entriesWithAvgAsc.length - 1].date) : 'No data'}</div>
               </div>
 
               <div className="p-3 bg-purple-50 border border-purple-100 rounded">
@@ -771,86 +777,107 @@ export default function App() {
               </div>
 
               <div className="p-3 bg-pink-50 border border-pink-100 rounded">
-                <div className="text-xs text-pink-600 font-semibold mb-1">Best Streak</div>
-                <div className="text-lg font-bold text-pink-900">{stats.maxStreak} days</div>
-                <div className="text-xs text-pink-700">Personal record</div>
+                <div className="text-xs text-pink-600 font-semibold mb-1">Highest Weight</div>
+                <div className="text-lg font-bold text-pink-900">{stats.highestActual.weightNum.toFixed(1)}</div>
+                <div className="text-xs text-pink-700">{formatDate(stats.highestActual.date)}</div>
               </div>
-            </div>
-          )}
 
-          {/* Calorie Delta */}
-          {calorieDelta && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
-              <div className="text-sm font-semibold text-blue-900 mb-2">7-Day Trend Analysis</div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs text-blue-600">Rate of Change</div>
-                  <div className="text-xl font-bold text-blue-900">
-                    {calorieDelta.lbsPerWeek > 0 ? '+' : ''}{calorieDelta.lbsPerWeek} lbs/week
+              {calorieDelta && (
+                <>
+                  <div className="p-3 bg-cyan-50 border border-cyan-100 rounded">
+                    <div className="text-xs text-cyan-600 font-semibold mb-1">Calorie Delta</div>
+                    <div className="text-lg font-bold text-cyan-900">
+                      {calorieDelta.caloriesPerDay > 0 ? '+' : ''}{calorieDelta.caloriesPerDay} cal/day
+                    </div>
+                    <div className="text-xs text-cyan-700">
+                      {calorieDelta.caloriesPerDay > 0 ? 'Surplus' : 'Deficit'}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-xs text-blue-600">Estimated Calorie Delta</div>
-                  <div className="text-xl font-bold text-blue-900">
-                    {calorieDelta.caloriesPerDay > 0 ? '+' : ''}{calorieDelta.caloriesPerDay} cal/day
-                  </div>
-                  <div className="text-xs text-blue-700 mt-1">
-                    {calorieDelta.caloriesPerDay > 0 ? 'Surplus' : 'Deficit'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Goal Calculator */}
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded">
-            <div className="text-sm font-semibold text-green-900 mb-2">Goal Timeline</div>
-            <div className="flex gap-2 items-end mb-3">
-              <div className="flex-1">
-                <label className="text-xs text-green-600 block mb-1">Target Weight (lbs)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={goalInput}
-                  onChange={(e) => setGoalInput(e.target.value)}
-                  placeholder="e.g. 175"
-                  className="w-full px-3 py-2 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <button
-                onClick={handleSaveGoal}
-                disabled={!goalInput || isNaN(Number(goalInput))}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Save
-              </button>
-              {goalWeight && (
-                <button
-                  onClick={handleClearGoal}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
-                >
-                  Clear
-                </button>
+                  <div className="p-3 bg-indigo-50 border border-indigo-100 rounded">
+                    <div className="text-xs text-indigo-600 font-semibold mb-1">Rate of Change</div>
+                    <div className="text-lg font-bold text-indigo-900">
+                      {calorieDelta.lbsPerWeek > 0 ? '+' : ''}{calorieDelta.lbsPerWeek} lbs/week
+                    </div>
+                    <div className="text-xs text-indigo-700">7-day trend</div>
+                  </div>
+                </>
               )}
             </div>
-            {goalProjection && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Remaining:</span>
-                  <span className="font-bold text-green-900">{goalProjection.remaining} lbs</span>
+          )}
+
+          {/* Goal Weight Setting */}
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-green-50 border border-green-200 rounded">
+              <div className="text-sm font-semibold text-green-900 mb-3">Goal Weight</div>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="text-xs text-green-600 block mb-1">Target Weight (lbs)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={goalInput}
+                    onChange={(e) => setGoalInput(e.target.value)}
+                    placeholder="e.g. 175"
+                    className="w-full px-3 py-2 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Estimated Time:</span>
-                  <span className="font-bold text-green-900">{goalProjection.daysToGoal} days</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Target Date:</span>
-                  <span className="font-bold text-green-900">{formatDate(goalProjection.targetDate)}</span>
-                </div>
+                <button
+                  onClick={handleSaveGoal}
+                  disabled={!goalInput || isNaN(Number(goalInput))}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Save
+                </button>
+                {goalWeight && (
+                  <button
+                    onClick={handleClearGoal}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
-            )}
-            {!calorieDelta && goalWeight && (
-              <div className="text-xs text-green-700">Need at least 7 entries to calculate timeline</div>
+              {!calorieDelta && goalWeight && (
+                <div className="text-xs text-green-700 mt-2">Need at least 7 entries to calculate timeline</div>
+              )}
+            </div>
+
+            {/* Goal Timeline Projection */}
+            {goalProjection && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded">
+                <div className="text-sm font-semibold text-green-900 mb-3">Goal Timeline</div>
+                {goalProjection.wrongDirection ? (
+                  <div className="space-y-2 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-yellow-700">Remaining:</span>
+                      <span className="font-bold text-yellow-900">{Math.abs(goalProjection.remaining)} lbs to {goalProjection.needToLose ? 'lose' : 'gain'}</span>
+                    </div>
+                    <div className="text-sm text-yellow-800">
+                      <div className="font-semibold mb-1">⚠️ Trending wrong direction</div>
+                      <div>Current trend: {goalProjection.currentCalPerDay > 0 ? '+' : ''}{goalProjection.currentCalPerDay} cal/day ({goalProjection.needToLose ? 'gaining' : 'losing'})</div>
+                      <div className="mt-1">
+                        Need to {goalProjection.needToLose ? 'reduce' : 'increase'} intake by <span className="font-bold">{goalProjection.neededCalChange} cal/day</span> to reverse trend
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Remaining:</span>
+                      <span className="font-bold text-green-900">{Math.abs(goalProjection.remaining)} lbs</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Estimated Time:</span>
+                      <span className="font-bold text-green-900">{goalProjection.daysToGoal} days</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Target Date:</span>
+                      <span className="font-bold text-green-900">{formatDate(goalProjection.targetDate)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
