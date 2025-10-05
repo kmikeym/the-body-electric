@@ -126,6 +126,9 @@ Each mini-app chooses its own stack. Example (Weight Tracker):
 - React 18 + TypeScript
 - Vite build system
 - Fireproof (local-first database)
+  - Docs: https://use-fireproof.com/docs/welcome/
+  - Database API: https://use-fireproof.com/docs/database-api/documents
+  - Important: IPLD cannot encode JavaScript `undefined` values - all document fields must have valid values
 - Recharts, Tailwind CSS, date-fns
 
 ## Development Guidelines
@@ -134,6 +137,16 @@ Each mini-app chooses its own stack. Example (Weight Tracker):
 - **NEVER add debugging code** to production files (no console.log, debug UI elements, etc.)
 - Use browser DevTools console for debugging
 - Check browser console for errors instead of adding debug output to code
+
+### Chrome DevTools MCP
+This project has the Chrome DevTools MCP server installed, which allows Claude to:
+- **Browser automation**: Click, fill forms, navigate pages, take screenshots
+- **Performance analysis**: Run performance traces, analyze Core Web Vitals
+- **Network inspection**: View and analyze network requests
+- **Console access**: Read console messages and errors
+- **Emulation**: Test with CPU/network throttling
+
+Use this for testing web pages, debugging issues, and analyzing performance without manual intervention.
 
 ## Future Enhancements
 

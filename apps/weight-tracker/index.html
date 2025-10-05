@@ -279,6 +279,8 @@ export default function App() {
       let imported = 0;
       let skipped = 0;
 
+      // Collect entries to import first
+      const entriesToImport = [];
       for (const line of dataLines) {
         const parts = line.split(',');
         if (parts.length < 3) continue;
@@ -287,18 +289,43 @@ export default function App() {
         const weight = parts[1].trim();
         const isInterpolated = parts[2].trim();
 
-        // Only import non-interpolated entries
+        // Only collect non-interpolated entries
         if (isInterpolated === 'No' && weight && date) {
-          await database.put({
-            type: "weight-entry",
-            date: date,
-            weight: weight,
-            createdAt: Date.now()
-          });
-          imported++;
+          entriesToImport.push({ date, weight });
         } else {
           skipped++;
         }
+      }
+
+      // Import entries with a small delay to avoid overwhelming Fireproof
+      for (let i = 0; i < entriesToImport.length; i++) {
+        const { date, weight } = entriesToImport[i];
+
+        // Validate data before import
+        if (!date || !weight || isNaN(Number(weight))) {
+          skipped++;
+          continue;
+        }
+
+        setImportStatus(`Importing ${i + 1}/${entriesToImport.length}...`);
+
+        // Parse date and ensure valid timestamp (fallback to current time if invalid)
+        const parsedDate = new Date(date + "T00:00:00");
+        const timestamp = !isNaN(parsedDate.getTime()) ? parsedDate.getTime() : Date.now();
+
+        // Create clean object with exact same structure as form
+        const entry = Object.create(null);
+        entry.type = "weight-entry";
+        entry.date = date;
+        entry.weight = weight;
+        entry.createdAt = timestamp;
+
+        // Let Fireproof auto-generate _id to avoid conflicts
+        await database.put(entry);
+        imported++;
+
+        // Delay between each entry to let Fireproof fully process
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       setImportStatus(`✓ Imported ${imported} entries (skipped ${skipped} interpolated)`);
