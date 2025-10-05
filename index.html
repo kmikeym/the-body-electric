@@ -135,17 +135,39 @@
 
         .body-wireframe {
             position: relative;
-            width: 200px;
+            width: 400px;
             height: 600px;
             margin: 0 auto;
         }
 
-        /* Simple body wireframe */
+        /* Detailed body wireframe */
         .wireframe {
+            stroke: #0ff;
+            fill: none;
+            stroke-width: 1;
+            filter: drop-shadow(0 0 3px #0ff);
+        }
+
+        .wireframe-thick {
             stroke: #0ff;
             fill: none;
             stroke-width: 2;
             filter: drop-shadow(0 0 5px #0ff);
+        }
+
+        .skeleton {
+            stroke: #0ff;
+            fill: none;
+            stroke-width: 3;
+            opacity: 0.6;
+            filter: drop-shadow(0 0 8px #0ff);
+        }
+
+        .muscle {
+            stroke: #06d6a0;
+            fill: rgba(6, 214, 160, 0.05);
+            stroke-width: 1;
+            opacity: 0.4;
         }
 
         .scan-line {
@@ -160,7 +182,7 @@
                 transparent
             );
             box-shadow: 0 0 20px #0ff;
-            animation: scan 3s infinite;
+            animation: scan 4s infinite;
         }
 
         @keyframes scan {
@@ -168,6 +190,37 @@
             10% { opacity: 1; }
             90% { opacity: 1; }
             100% { top: 100%; opacity: 0; }
+        }
+
+        /* Targeting reticles */
+        .reticle {
+            stroke: #0ff;
+            fill: none;
+            stroke-width: 1.5;
+            opacity: 0.8;
+        }
+
+        .reticle-pulse {
+            animation: reticlePulse 2s infinite;
+        }
+
+        @keyframes reticlePulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.1); }
+        }
+
+        /* Data points */
+        .data-point {
+            fill: #0ff;
+            filter: drop-shadow(0 0 5px #0ff);
+            animation: pulse 2s infinite;
+        }
+
+        .data-line {
+            stroke: #0ff;
+            stroke-width: 1;
+            stroke-dasharray: 3, 3;
+            opacity: 0.5;
         }
 
         /* Side panels */
@@ -413,40 +466,117 @@
                     BIO-SYSTEMS MONITOR // FULL BODY SCAN
                 </div>
                 <div class="body-wireframe">
-                    <svg width="200" height="600" viewBox="0 0 200 600">
-                        <!-- Head -->
-                        <ellipse cx="100" cy="60" rx="35" ry="45" class="wireframe"/>
+                    <svg width="400" height="600" viewBox="0 0 400 600">
+                        <defs>
+                            <!-- Gradient for glowing effect -->
+                            <radialGradient id="glow">
+                                <stop offset="0%" style="stop-color:#0ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0ff;stop-opacity:0" />
+                            </radialGradient>
+                        </defs>
 
-                        <!-- Neck -->
-                        <line x1="85" y1="105" x2="85" y2="125" class="wireframe"/>
-                        <line x1="115" y1="105" x2="115" y2="125" class="wireframe"/>
+                        <!-- Skeletal structure -->
+                        <!-- Skull -->
+                        <ellipse cx="200" cy="50" rx="30" ry="40" class="skeleton"/>
+                        <path d="M 180 80 Q 200 90 220 80" class="skeleton"/>
 
-                        <!-- Shoulders -->
-                        <line x1="50" y1="140" x2="150" y2="140" class="wireframe"/>
+                        <!-- Spine -->
+                        <line x1="200" y1="90" x2="200" y2="320" class="skeleton"/>
 
-                        <!-- Arms -->
-                        <line x1="50" y1="140" x2="30" y2="280" class="wireframe"/>
-                        <line x1="150" y1="140" x2="170" y2="280" class="wireframe"/>
-                        <line x1="30" y1="280" x2="25" y2="330" class="wireframe"/>
-                        <line x1="170" y1="280" x2="175" y2="330" class="wireframe"/>
+                        <!-- Ribcage -->
+                        <ellipse cx="200" cy="140" rx="45" ry="30" class="wireframe"/>
+                        <ellipse cx="200" cy="160" rx="50" ry="25" class="wireframe"/>
+                        <ellipse cx="200" cy="180" rx="52" ry="28" class="wireframe"/>
+                        <ellipse cx="200" cy="200" rx="50" ry="25" class="wireframe"/>
 
-                        <!-- Torso -->
-                        <line x1="75" y1="125" x2="60" y2="320" class="wireframe"/>
-                        <line x1="125" y1="125" x2="140" y2="320" class="wireframe"/>
-                        <line x1="60" y1="320" x2="70" y2="400" class="wireframe"/>
-                        <line x1="140" y1="320" x2="130" y2="400" class="wireframe"/>
+                        <!-- Pelvis -->
+                        <ellipse cx="200" cy="320" rx="45" ry="25" class="skeleton"/>
+                        <path d="M 155 315 Q 155 340 175 345" class="skeleton"/>
+                        <path d="M 245 315 Q 245 340 225 345" class="skeleton"/>
 
-                        <!-- Legs -->
-                        <line x1="70" y1="400" x2="75" y2="550" class="wireframe"/>
-                        <line x1="130" y1="400" x2="125" y2="550" class="wireframe"/>
-                        <line x1="75" y1="550" x2="70" y2="590" class="wireframe"/>
-                        <line x1="125" y1="550" x2="130" y2="590" class="wireframe"/>
+                        <!-- Shoulders/Clavicles -->
+                        <line x1="200" y1="120" x2="145" y2="130" class="skeleton"/>
+                        <line x1="200" y1="120" x2="255" y2="130" class="skeleton"/>
 
-                        <!-- Horizontal lines for structure -->
-                        <line x1="75" y1="125" x2="125" y2="125" class="wireframe"/>
-                        <line x1="65" y1="220" x2="135" y2="220" class="wireframe"/>
-                        <line x1="60" y1="320" x2="140" y2="320" class="wireframe"/>
-                        <line x1="70" y1="400" x2="130" y2="400" class="wireframe"/>
+                        <!-- Arms - skeletal -->
+                        <line x1="145" y1="130" x2="120" y2="240" class="skeleton"/>
+                        <line x1="255" y1="130" x2="280" y2="240" class="skeleton"/>
+                        <line x1="120" y1="240" x2="110" y2="340" class="skeleton"/>
+                        <line x1="280" y1="240" x2="290" y2="340" class="skeleton"/>
+
+                        <!-- Legs - skeletal -->
+                        <line x1="175" y1="345" x2="180" y2="480" class="skeleton"/>
+                        <line x1="225" y1="345" x2="220" y2="480" class="skeleton"/>
+                        <line x1="180" y1="480" x2="175" y2="570" class="skeleton"/>
+                        <line x1="220" y1="480" x2="225" y2="570" class="skeleton"/>
+
+                        <!-- Muscle groups overlay -->
+                        <!-- Chest/pectorals -->
+                        <path d="M 170 130 Q 150 160 155 190 L 200 180 Z" class="muscle"/>
+                        <path d="M 230 130 Q 250 160 245 190 L 200 180 Z" class="muscle"/>
+
+                        <!-- Abs -->
+                        <rect x="185" y="200" width="30" height="25" class="muscle"/>
+                        <rect x="185" y="230" width="30" height="25" class="muscle"/>
+                        <rect x="185" y="260" width="30" height="25" class="muscle"/>
+
+                        <!-- Shoulders/deltoids -->
+                        <ellipse cx="145" cy="140" rx="15" ry="25" class="muscle"/>
+                        <ellipse cx="255" cy="140" rx="15" ry="25" class="muscle"/>
+
+                        <!-- Biceps -->
+                        <ellipse cx="130" cy="180" rx="8" ry="30" class="muscle"/>
+                        <ellipse cx="270" cy="180" rx="8" ry="30" class="muscle"/>
+
+                        <!-- Quads -->
+                        <ellipse cx="178" cy="400" rx="12" ry="50" class="muscle"/>
+                        <ellipse cx="222" cy="400" rx="12" ry="50" class="muscle"/>
+
+                        <!-- Calves -->
+                        <ellipse cx="177" cy="520" rx="10" ry="35" class="muscle"/>
+                        <ellipse cx="223" cy="520" rx="10" ry="35" class="muscle"/>
+
+                        <!-- Targeting reticles -->
+                        <!-- Head reticle -->
+                        <g class="reticle-pulse">
+                            <circle cx="200" cy="50" r="50" class="reticle"/>
+                            <line x1="150" y1="50" x2="165" y2="50" class="reticle"/>
+                            <line x1="235" y1="50" x2="250" y2="50" class="reticle"/>
+                            <line x1="200" y1="0" x2="200" y2="15" class="reticle"/>
+                            <line x1="200" y1="85" x2="200" y2="100" class="reticle"/>
+                        </g>
+
+                        <!-- Chest reticle -->
+                        <g class="reticle-pulse" style="animation-delay: 0.5s">
+                            <circle cx="200" cy="180" r="60" class="reticle"/>
+                            <line x1="145" y1="180" x2="255" y2="180" class="reticle"/>
+                            <line x1="200" y1="125" x2="200" y2="235" class="reticle"/>
+                        </g>
+
+                        <!-- Pelvis reticle -->
+                        <g class="reticle-pulse" style="animation-delay: 1s">
+                            <circle cx="200" cy="320" r="55" class="reticle"/>
+                            <path d="M 145 320 L 255 320 M 200 265 L 200 375" class="reticle"/>
+                        </g>
+
+                        <!-- Data points -->
+                        <circle cx="200" cy="50" r="3" class="data-point"/>
+                        <circle cx="145" cy="130" r="3" class="data-point" style="animation-delay: 0.3s"/>
+                        <circle cx="255" cy="130" r="3" class="data-point" style="animation-delay: 0.3s"/>
+                        <circle cx="200" cy="180" r="3" class="data-point" style="animation-delay: 0.6s"/>
+                        <circle cx="200" cy="320" r="3" class="data-point" style="animation-delay: 0.9s"/>
+                        <circle cx="180" cy="480" r="3" class="data-point" style="animation-delay: 1.2s"/>
+                        <circle cx="220" cy="480" r="3" class="data-point" style="animation-delay: 1.2s"/>
+
+                        <!-- Data readout lines -->
+                        <line x1="200" y1="50" x2="320" y2="30" class="data-line"/>
+                        <line x1="200" y1="180" x2="320" y2="180" class="data-line"/>
+                        <line x1="200" y1="320" x2="320" y2="350" class="data-line"/>
+
+                        <!-- Data labels -->
+                        <text x="325" y="35" fill="#0ff" font-size="9" font-family="Share Tech Mono, monospace">HEAD</text>
+                        <text x="325" y="185" fill="#0ff" font-size="9" font-family="Share Tech Mono, monospace">TORSO</text>
+                        <text x="325" y="355" fill="#0ff" font-size="9" font-family="Share Tech Mono, monospace">CORE</text>
                     </svg>
                     <div class="scan-line"></div>
                 </div>
